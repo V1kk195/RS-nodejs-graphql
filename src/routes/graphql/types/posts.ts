@@ -18,9 +18,11 @@ export const postObject = new GraphQLObjectType({
   }),
 });
 
+export const postsListType = new GraphQLList(postObject);
+
 export const postsQueryFields = {
   posts: {
-    type: new GraphQLList(postObject),
+    type: postsListType,
     resolve: async (_source, _args, context: Context) => {
       return context.prisma.post.findMany();
     },
