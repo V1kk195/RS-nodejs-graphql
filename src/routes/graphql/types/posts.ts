@@ -1,0 +1,22 @@
+import { GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql/type/index.js';
+import { UUIDType } from './uuid.js';
+import { Context } from './context.js';
+
+export const postObject = new GraphQLObjectType({
+  name: 'post',
+  fields: () => ({
+    id: { type: UUIDType },
+    title: { type: GraphQLString },
+    content: { type: GraphQLString },
+    authorId: { type: UUIDType },
+  }),
+});
+
+export const postsQueryFields = {
+  posts: {
+    type: new GraphQLList(postObject),
+    resolve: async (_source, _args, context: Context) => {
+      return context.prisma.post.findMany();
+    },
+  },
+};
