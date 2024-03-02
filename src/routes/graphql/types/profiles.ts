@@ -1,5 +1,6 @@
 import {
   GraphQLBoolean,
+  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -8,7 +9,7 @@ import {
 import { UUIDType } from './uuid.js';
 import { Context } from './context.js';
 import { UUID } from 'node:crypto';
-import { memberTypeObject } from './memberType.js';
+import { memberTypeEnum, memberTypeObject } from './memberType.js';
 import { Profile } from '@prisma/client';
 
 export const profileObject = new GraphQLObjectType({
@@ -18,7 +19,7 @@ export const profileObject = new GraphQLObjectType({
     isMale: { type: GraphQLBoolean },
     yearOfBirth: { type: GraphQLInt },
     userId: { type: UUIDType },
-    memberTypeId: { type: UUIDType },
+    memberTypeId: { type: memberTypeEnum },
     memberType: {
       type: memberTypeObject,
       resolve: async (_source: Profile, _args, context: Context) => {
@@ -27,6 +28,16 @@ export const profileObject = new GraphQLObjectType({
         });
       },
     },
+  }),
+});
+
+export const profileInputObject = new GraphQLInputObjectType({
+  name: 'CreateProfileInput',
+  fields: () => ({
+    isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
+    yearOfBirth: { type: new GraphQLNonNull(GraphQLInt) },
+    userId: { type: new GraphQLNonNull(UUIDType) },
+    memberTypeId: { type: new GraphQLNonNull(memberTypeEnum) },
   }),
 });
 
@@ -47,6 +58,31 @@ export const profilesQueryFields = {
     resolve: async (_source, { id }: { id: UUID }, { prisma }: Context) => {
       return prisma.profile.findUnique({
         where: { id },
+      });
+    },
+  },
+};
+
+type CreateProfileArgs = {
+  dto: {
+    isMale: boolean;
+    yearOfBirth: number;
+    userId: string;
+    memberTypeId: string;
+  };
+};
+
+export const profilesMutationFields = {
+  createProfile: {
+    type: profileObject as GraphQLObjectType,
+    args: {
+      dto: {
+        type: new GraphQLNonNull(profileInputObject),
+      },
+    },
+    resolve: async (_source, { dto }: CreateProfileArgs, { prisma }: Context) => {
+      return prisma.profile.create({
+        data: dto,
       });
     },
   },

@@ -1,5 +1,6 @@
 import {
   GraphQLFloat,
+  GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -49,6 +50,14 @@ export const userObject = new GraphQLObjectType({
   }),
 });
 
+export const userInputObject = new GraphQLInputObjectType({
+  name: 'CreateUserInput',
+  fields: () => ({
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    balance: { type: new GraphQLNonNull(GraphQLFloat) },
+  }),
+});
+
 export const usersQueryFields = {
   users: {
     type: new GraphQLList(userObject),
@@ -57,7 +66,7 @@ export const usersQueryFields = {
     },
   },
   user: {
-    type: userObject,
+    type: userObject as GraphQLObjectType,
     args: {
       id: {
         type: new GraphQLNonNull(UUIDType),
@@ -66,6 +75,29 @@ export const usersQueryFields = {
     resolve: async (_source, { id }: { id: UUID }, { prisma }: Context) => {
       return prisma.user.findUnique({
         where: { id },
+      });
+    },
+  },
+};
+
+type CreateUserArgs = {
+  dto: {
+    name: string;
+    balance: number;
+  };
+};
+
+export const usersMutationFields = {
+  createUser: {
+    type: userObject as GraphQLObjectType,
+    args: {
+      dto: {
+        type: new GraphQLNonNull(userInputObject),
+      },
+    },
+    resolve: async (_source, { dto }: CreateUserArgs, { prisma }: Context) => {
+      return prisma.user.create({
+        data: dto,
       });
     },
   },
