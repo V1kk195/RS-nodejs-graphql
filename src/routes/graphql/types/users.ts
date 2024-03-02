@@ -1,4 +1,5 @@
 import {
+  GraphQLBoolean,
   GraphQLFloat,
   GraphQLInputObjectType,
   GraphQLList,
@@ -99,6 +100,11 @@ type ChangeUserArgs = {
   id: string;
 } & CreateUserArgs;
 
+type SubscribeUserArgs = {
+  userId: string;
+  authorId: string;
+};
+
 export const usersMutationFields = {
   createUser: {
     type: userObject as GraphQLObjectType,
@@ -140,6 +146,56 @@ export const usersMutationFields = {
       return prisma.user.update({
         where: { id },
         data: dto,
+      });
+    },
+  },
+  subscribeTo: {
+    type: userObject as GraphQLObjectType,
+    args: {
+      userId: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      authorId: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+    },
+    resolve: async (
+      _source,
+      { userId, authorId }: SubscribeUserArgs,
+      { prisma }: Context,
+    ) => {
+      return prisma.user.update({
+        where: { id: userId },
+        data: {
+          userSubscribedTo: {
+            create: { authorId },
+          },
+        },
+      });
+    },
+  },
+  unsubscribeFrom: {
+    type: UUIDType,
+    args: {
+      userId: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      authorId: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+    },
+    resolve: async (
+      _source,
+      { userId, authorId }: SubscribeUserArgs,
+      { prisma }: Context,
+    ) => {
+      await prisma.subscribersOnAuthors.delete({
+        where: {
+          subscriberId_authorId: {
+            subscriberId: userId,
+            authorId: authorId,
+          },
+        },
       });
     },
   },
