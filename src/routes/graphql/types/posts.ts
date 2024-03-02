@@ -1,4 +1,5 @@
 import {
+  GraphQLBoolean,
   GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
@@ -71,6 +72,19 @@ export const postsMutationFields = {
     resolve: async (_source, { dto }: CreatePostArgs, { prisma }: Context) => {
       return prisma.post.create({
         data: dto,
+      });
+    },
+  },
+  deletePost: {
+    type: UUIDType,
+    args: {
+      id: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+    },
+    resolve: async (_source, { id }: { id: string }, { prisma }: Context) => {
+      await prisma.post.delete({
+        where: { id },
       });
     },
   },

@@ -1,4 +1,5 @@
 import {
+  GraphQLBoolean,
   GraphQLFloat,
   GraphQLInputObjectType,
   GraphQLList,
@@ -98,6 +99,19 @@ export const usersMutationFields = {
     resolve: async (_source, { dto }: CreateUserArgs, { prisma }: Context) => {
       return prisma.user.create({
         data: dto,
+      });
+    },
+  },
+  deleteUser: {
+    type: UUIDType,
+    args: {
+      id: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+    },
+    resolve: async (_source, { id }: { id: string }, { prisma }: Context) => {
+      await prisma.user.delete({
+        where: { id },
       });
     },
   },
