@@ -29,6 +29,14 @@ export const postInputObject = new GraphQLInputObjectType({
   }),
 });
 
+export const changePostInputObject = new GraphQLInputObjectType({
+  name: 'ChangePostInput',
+  fields: () => ({
+    title: { type: GraphQLString },
+    content: { type: GraphQLString },
+  }),
+});
+
 export const postsListType = new GraphQLList(postObject);
 
 export const postsQueryFields = {
@@ -61,6 +69,14 @@ type CreatePostArgs = {
   };
 };
 
+type ChangePostArgs = {
+  id: string;
+  dto: {
+    title: string;
+    content: string;
+  };
+};
+
 export const postsMutationFields = {
   createPost: {
     type: postObject,
@@ -85,6 +101,23 @@ export const postsMutationFields = {
     resolve: async (_source, { id }: { id: string }, { prisma }: Context) => {
       await prisma.post.delete({
         where: { id },
+      });
+    },
+  },
+  changePost: {
+    type: postObject,
+    args: {
+      id: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      dto: {
+        type: new GraphQLNonNull(changePostInputObject),
+      },
+    },
+    resolve: async (_source, { id, dto }: ChangePostArgs, { prisma }: Context) => {
+      return prisma.post.update({
+        where: { id },
+        data: dto,
       });
     },
   },

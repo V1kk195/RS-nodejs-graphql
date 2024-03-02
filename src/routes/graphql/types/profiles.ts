@@ -12,6 +12,24 @@ import { UUID } from 'node:crypto';
 import { memberTypeEnum, memberTypeObject } from './memberType.js';
 import { Profile } from '@prisma/client';
 
+type CreateProfileArgs = {
+  dto: {
+    isMale: boolean;
+    yearOfBirth: number;
+    userId: string;
+    memberTypeId: string;
+  };
+};
+
+type ChangeProfileArgs = {
+  id: string;
+  dto: {
+    isMale: boolean;
+    yearOfBirth: number;
+    memberTypeId: string;
+  };
+};
+
 export const profileObject = new GraphQLObjectType({
   name: 'profile',
   fields: () => ({
@@ -31,13 +49,22 @@ export const profileObject = new GraphQLObjectType({
   }),
 });
 
-export const profileInputObject = new GraphQLInputObjectType({
+const profileInputObject = new GraphQLInputObjectType({
   name: 'CreateProfileInput',
   fields: () => ({
     isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
     yearOfBirth: { type: new GraphQLNonNull(GraphQLInt) },
     userId: { type: new GraphQLNonNull(UUIDType) },
     memberTypeId: { type: new GraphQLNonNull(memberTypeEnum) },
+  }),
+});
+
+const changeProfileInputObject = new GraphQLInputObjectType({
+  name: 'ChangeProfileInput',
+  fields: () => ({
+    isMale: { type: GraphQLBoolean },
+    yearOfBirth: { type: GraphQLInt },
+    memberTypeId: { type: memberTypeEnum },
   }),
 });
 
@@ -61,15 +88,6 @@ export const profilesQueryFields = {
       });
     },
   },
-};
-
-type CreateProfileArgs = {
-  dto: {
-    isMale: boolean;
-    yearOfBirth: number;
-    userId: string;
-    memberTypeId: string;
-  };
 };
 
 export const profilesMutationFields = {
@@ -96,6 +114,23 @@ export const profilesMutationFields = {
     resolve: async (_source, { id }: { id: string }, { prisma }: Context) => {
       await prisma.profile.delete({
         where: { id },
+      });
+    },
+  },
+  changeProfile: {
+    type: profileObject as GraphQLObjectType,
+    args: {
+      id: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      dto: {
+        type: new GraphQLNonNull(changeProfileInputObject),
+      },
+    },
+    resolve: async (_source, { id, dto }: ChangeProfileArgs, { prisma }: Context) => {
+      return prisma.profile.update({
+        where: { id },
+        data: dto,
       });
     },
   },

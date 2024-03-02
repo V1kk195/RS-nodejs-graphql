@@ -1,5 +1,4 @@
 import {
-  GraphQLBoolean,
   GraphQLFloat,
   GraphQLInputObjectType,
   GraphQLList,
@@ -59,6 +58,14 @@ export const userInputObject = new GraphQLInputObjectType({
   }),
 });
 
+export const changeUserInputObject = new GraphQLInputObjectType({
+  name: 'ChangeUserInput',
+  fields: () => ({
+    name: { type: GraphQLString },
+    balance: { type: GraphQLFloat },
+  }),
+});
+
 export const usersQueryFields = {
   users: {
     type: new GraphQLList(userObject),
@@ -88,6 +95,10 @@ type CreateUserArgs = {
   };
 };
 
+type ChangeUserArgs = {
+  id: string;
+} & CreateUserArgs;
+
 export const usersMutationFields = {
   createUser: {
     type: userObject as GraphQLObjectType,
@@ -112,6 +123,23 @@ export const usersMutationFields = {
     resolve: async (_source, { id }: { id: string }, { prisma }: Context) => {
       await prisma.user.delete({
         where: { id },
+      });
+    },
+  },
+  changeUser: {
+    type: userObject as GraphQLObjectType,
+    args: {
+      id: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      dto: {
+        type: new GraphQLNonNull(changeUserInputObject),
+      },
+    },
+    resolve: async (_source, { id, dto }: ChangeUserArgs, { prisma }: Context) => {
+      return prisma.user.update({
+        where: { id },
+        data: dto,
       });
     },
   },
