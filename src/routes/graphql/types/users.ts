@@ -23,13 +23,13 @@ export const userObject = new GraphQLObjectType({
     profile: {
       type: profileObject,
       resolve: async (_source: User, _args, context: Context) => {
-        return context.prisma.profile.findUnique({ where: { userId: _source.id } });
+        return context.loader.profiles.load(_source.id);
       },
     },
     posts: {
       type: postsListType,
       resolve: async (_source: User, _args, context: Context) => {
-        return context.prisma.post.findMany({ where: { authorId: _source.id } });
+        return context.loader.posts.load(_source.id);
       },
     },
     userSubscribedTo: {

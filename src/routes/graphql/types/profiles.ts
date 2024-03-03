@@ -40,10 +40,8 @@ export const profileObject = new GraphQLObjectType({
     memberTypeId: { type: memberTypeEnum },
     memberType: {
       type: memberTypeObject,
-      resolve: async (_source: Profile, _args, context: Context) => {
-        return context.prisma.memberType.findUnique({
-          where: { id: _source.memberTypeId },
-        });
+      resolve: async (_source: Profile, _args, { loader }: Context) => {
+        return loader.memberTypes.load(_source.memberTypeId);
       },
     },
   }),
